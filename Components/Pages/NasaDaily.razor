@@ -1,0 +1,55 @@
+@page "/NASA-daily"
+@attribute [StreamRendering]
+
+@inject HttpClient Http
+
+<PageTitle>NASA Daily Astrology Picture</PageTitle>
+
+<h1>NASA Daily Astrology Picture</h1>
+
+<h2>The purpose of this page is to call an API with a key, and display the information that comes back.</h2>
+
+@if (apod == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div>
+        <h2>@apod.title</h2>
+        @if (apod.media_type == "image")
+        {
+            <p>@apod.explanation</p>
+            <img src="@apod.url" alt="@apod.title" style="max-width:100%;height:auto;" />
+        }
+        else
+        {
+            <p>Media type is not an image. <a href="@apod.url" target="_blank">View here</a></p>
+        }
+    </div>
+}
+
+@code {
+    private ApodResponse? apod;
+    private string responseCode = "";
+    protected override async Task OnInitializedAsync()
+    {
+        string apiKey = "DEMO_KEY"; // NASA demo API key
+        string url = $"https://api.nasa.gov/planetary/apod?api_key={apiKey}";
+        var response = await Http.GetAsync(url);
+        responseCode = response.StatusCode.ToString();
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            apod = System.Text.Json.JsonSerializer.Deserialize<ApodResponse>(json);
+        }
+    }
+
+    private class ApodResponse
+    {
+        public string? title { get; set; }
+        public string? url { get; set; }
+        public string? explanation { get; set; }
+        public string? media_type { get; set; }
+    }
+}

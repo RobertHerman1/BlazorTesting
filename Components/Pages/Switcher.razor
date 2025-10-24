@@ -1,0 +1,33 @@
+﻿@page "/Switcher"
+@rendermode InteractiveServer
+
+<h3>Switcher Page</h3>
+
+<p>Welcome to my first custom Blazor page!</p>
+
+<h1>Switcher!</h1>
+
+<p role="status">Switch between a and b and c: @switcher</p>
+
+<button class="btn btn-primary" @onclick="Switching">Click me</button>
+
+
+@code {
+    private string switcher = "a";
+
+    private void Switching()
+    {
+        if (switcher == "a")
+        {
+            switcher = "b";
+        }
+        else if (switcher == "b")
+        {
+            switcher = "c";
+        }
+        else
+        {
+            switcher = "a";
+        }
+    }
+}

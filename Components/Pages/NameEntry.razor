@@ -1,0 +1,12 @@
+﻿@page "/NameEntry"
+@rendermode InteractiveServer
+
+<h3>NameEntry Page</h3>
+
+<input @bind="name" />
+
+<p role="status">Your name is: @name</p>
+
+@code {
+    private string name = "Kirginatharp";
+}

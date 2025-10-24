@@ -1,0 +1,111 @@
+@page "/weather-actual"
+@attribute [StreamRendering]
+
+@inject HttpClient Http
+
+<PageTitle>Actual Weather</PageTitle>
+
+<h1>Actual Weather</h1>
+
+@*<p>This component demonstrates showing real weather data for New York City (Open-Meteo API).</p>*@
+<p>This component demonstrates showing real weather data for Strongsville Ohio (Open-Meteo API).</p>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th aria-label="Temperature in Celsius">Temp. (C)</th>
+                <th aria-label="Temperature in Farenheit">Temp. (F)</th>
+                <th>Summary</th>
+                @*<th>Humidity (%)</th>*@
+                <th>Wind Speed (km/h)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                    @* <td>@forecast.Humidity</td>*@
+                    <td>@forecast.WindSpeed</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // New York City coordinates
+        //double latitude = 40.7128; //New York City latitude
+        //double longitude = -74.0060; //New York City longitude
+        double latitude = 41.3145; //Strongsville latitude
+        double longitude = -81.8352; //Strongsville longitude
+
+        int days = 7;
+        //string url = $"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=temperature_2m_max,weathercode,humidity_2m_max,windspeed_10m_max&timezone=America%2FNew_York&forecast_days={days}"; //Humidity is breaking it for some reason.
+        string url = $"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=temperature_2m_max,weathercode,windspeed_10m_max&timezone=America%2FNew_York&forecast_days={days}";
+
+        var response = await Http.GetAsync(url);
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            var data = System.Text.Json.JsonDocument.Parse(json);
+            var daily = data.RootElement.GetProperty("daily");
+            var dates = daily.GetProperty("time").EnumerateArray().ToArray();
+            var tempMax = daily.GetProperty("temperature_2m_max").EnumerateArray().ToArray();
+            var weatherCodes = daily.GetProperty("weathercode").EnumerateArray().ToArray();
+            //var humidity = daily.GetProperty("humidity_2m_max").EnumerateArray().ToArray();
+            var windSpeed = daily.GetProperty("windspeed_10m_max").EnumerateArray().ToArray();
+
+            forecasts = Enumerable.Range(0, days).Select(i => new WeatherForecast
+            {
+                Date = DateOnly.Parse(dates[i].GetString()!),
+                TemperatureC = (int)tempMax[i].GetDouble(),
+                Summary = WeatherCodeToSummary(weatherCodes[i].GetInt32()),
+                //Humidity = (int)humidity[i].GetDouble(),
+                WindSpeed = (int)windSpeed[i].GetDouble()
+            }).ToArray();
+        }
+    }
+
+    private string WeatherCodeToSummary(int code)
+    {
+        // Open-Meteo weather codes: https://open-meteo.com/en/docs#api_form
+        return code switch
+        {
+            0 => "Clear",
+            1 or 2 or 3 => "Partly Cloudy",
+            45 or 48 => "Foggy",
+            51 or 53 or 55 => "Drizzle",
+            61 or 63 or 65 => "Rain",
+            71 or 73 or 75 => "Snow",
+            80 or 81 or 82 => "Showers",
+            95 => "Thunderstorm",
+            96 or 99 => "Thunderstorm with hail",
+            _ => "Unknown"
+        };
+    }
+
+    private class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public string? Summary { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        //public int Humidity { get; set; }
+        public int WindSpeed { get; set; }
+    }
+}

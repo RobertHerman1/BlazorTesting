@@ -1,0 +1,12 @@
+﻿@page "/Hello"
+
+<h3>Hello Page</h3>
+
+<p>This Hello.razor page utilizes the public paramater "Name" from Greeting.Razor to fill the above values. The first two are defined on this page, while the third does not specify a name, using the default instead.</p>
+<p>Notice how the text is repeated after every name. It is replicating the "Greeting.razor" page with every instance of &lt;Greeting&gt;.</p>
+
+<p>-----------------</p>
+
+<Greeting Name="Alice" />
+<Greeting Name="Bob" />
+<Greeting />

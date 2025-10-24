@@ -1,0 +1,12 @@
+﻿@page "/Greeting"
+
+<p>Hello, @Name!</p>
+
+<p>This is an instance of "Greeting.razor". It gets used in "Hello.razor"</p>
+
+<p>-----------------</p>
+
+@code {
+    [Parameter]
+    public string Name { get; set; } = "Default_Name";
+}
